@@ -1,0 +1,5 @@
+144c144,145
+<                 raise FMGBaseException("An attempt was made to login with the SID None and URL != login url.")
+---
+>                 if not self.connection._connected:
+>                     self.connection._connect()
