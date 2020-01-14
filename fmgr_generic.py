@@ -129,11 +129,11 @@ def main():
 
     module = AnsibleModule(argument_spec=module_arg_spec,
                            supports_check_mode=False)
-
     if not module._socket_path:
         module.fail_json(**FAIL_SOCKET_MSG)
-
     connection = Connection(module._socket_path)
+    fmgr = FortiManagerHandler(connection, module)
+    fmgr.tools = FMGRCommon()
     response = DEFAULT_RESULT_OBJ
     method = None
     params = None
@@ -142,19 +142,24 @@ def main():
         raw_json_params = None
         try:
             raw_json_params = json.loads(module.params['json'])
+            method = raw_json_params['method']
+            params = raw_json_params['params']
         except Exception as e:
-            module.fail_json(failure=str(e))
-        method = raw_json_params['method']
-        params = raw_json_params['params']
+            module.fail_json(msg='invalid json content: %s' % (e))
     else:
         assert(module.params['method'] and module.params['params'])
         method = module.params['method']
         params = module.params['params']
 
+    if method not in ['get', 'add', 'set', 'update', 'delete', 'move', 'clone', 'exec']:
+        module.fail_json(msg='method:%s not supported' % (method))
+
     try:
         response = connection.send_request(method, params)
+        fmgr.govern_response(module=module, results=response, msg='Operation Finished',
+                             ansible_facts=fmgr.construct_ansible_facts(response, module.params, module.params))
     except Exception as e:
-        raise FMGBaseException(e)
+        module.fail_json(msg='error sending request: %s' % (e))
 
     module.exit_json(response=response[1])
 
