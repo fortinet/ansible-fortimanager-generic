@@ -154,6 +154,11 @@ def main():
     if method not in ['get', 'add', 'set', 'update', 'delete', 'move', 'clone', 'exec']:
         module.fail_json(msg='method:%s not supported' % (method))
 
+    if not isinstance(params, list):
+        module.fail_json(msg='parameter:params must be an array')
+    for param_block in params:
+        if 'url' not in param_block:
+            module.fail_json(msg='url must be specified in params')
     try:
         response = connection.send_request(method, params)
         fmgr.govern_response(module=module, results=response, msg='Operation Finished',
