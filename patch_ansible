@@ -1,0 +1,42 @@
+#! /bin/sh
+ansible_version=`ansible-playbook --version | grep -v '^ ' |cut -d ' ' -f 2`
+ansible_dir=`ansible-playbook --version |grep 'ansible python module location' |cut -d '=' -f 2 |tr -d ' '`
+fmgr_plugin_file=$ansible_dir"/plugins/httpapi/fortimanager.py"
+
+#$1: the file to be patched
+#$2: the patch file
+patch_file() {
+    echo "patching "$1
+    if ! patch -R --dry-run -s -f  $1 < $2; then
+        patch $1 < $2 > /dev/zero;
+    fi
+}
+
+known_unpatched_list="2.9.0  2.9.1  2.9.2  2.9.3  2.9.4  2.9.5"
+
+found=false
+for v in $known_unpatched_list; do
+    if [ "$v" == "$ansible_version" ]; then
+        found=true
+        break
+    fi
+done
+
+echo $ansible_version |grep '2.8.' > /dev/null
+is_ansible_28x=$?
+
+ask_for_patch() {
+    printf "do you want to patch for $ansible_version ? [yes/no]"
+    read option
+    if [ "$option" == "yes" ]; then
+        patch_file $fmgr_plugin_file ansible.2.9.x.patch
+    fi
+}
+
+if [ $found == true ]; then
+    patch_file $fmgr_plugin_file ansible.2.9.x.patch
+elif [ $is_ansible_28x == 0 ]; then
+    echo "No need to patch ansible "$ansible_version
+else
+    ask_for_patch
+fi
