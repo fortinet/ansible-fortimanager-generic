@@ -7,8 +7,8 @@ fmgr_plugin_file=$ansible_dir"/plugins/httpapi/fortimanager.py"
 #$2: the patch file
 patch_file() {
     echo "patching "$1
-    if ! patch -R --dry-run -s -f  $1 < $2; then
-        patch $1 < $2 > /dev/zero;
+    if ! patch -R --dry-run -s -f  $1 < $2 > /dev/null; then
+        patch $1 < $2 > /dev/null;
     fi
 }
 
