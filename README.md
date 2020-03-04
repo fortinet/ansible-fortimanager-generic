@@ -80,7 +80,7 @@ The following example is written in `method` and `params` style:
         fmgr_generic:
             method: "add"
             params:
-                - url: "/dvmdb/adom/root/script"
+                - url: "/dvmdb/adom/{{ adom }}/script"
                   data:
                     - name: "user_script0"
                       type: "cli"
