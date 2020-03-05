@@ -11,7 +11,7 @@ Make sure you have `ansible>=2.8.0` installed with python2 or python3, then run 
 ```sh
 $ python3 setup.py 
 $ python2 setup.py # if you are using python2
-$ source patch_ansible # mandatory if you are running with ansible>=2.9.0
+$ source patch_ansible
 ```
 This script also applies to Python virtual env.
 ### module usage
