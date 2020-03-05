@@ -9,9 +9,9 @@ Make sure you have `ansible>=2.8.0` installed with python2 or python3, then run 
 
 *ansible core 2.9 and later must be patched prior to invoking playbook for the module*
 ```sh
-$python3 setup.py 
-$python2 setup.py # if you are using python2
-$source patch_ansible
+$ python3 setup.py 
+$ python2 setup.py # if you are using python2
+$ source patch_ansible
 ```
 This script also applies to Python virtual env.
 ### module usage
@@ -80,7 +80,7 @@ The following example is written in `method` and `params` style:
         fmgr_generic:
             method: "add"
             params:
-                - url: "/dvmdb/adom/root/script"
+                - url: "/dvmdb/adom/{{ adom }}/script"
                   data:
                     - name: "user_script0"
                       type: "cli"
