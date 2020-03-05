@@ -1,0 +1,8 @@
+259c259
+<                                      results=results[1], ansible_facts=ansible_facts, rc=results[0],
+---
+>                                      ansible_module_results=results[1], ansible_facts=ansible_facts, rc=results[0],
+267c267
+<                                      skipped=skipped, results=results[1], ansible_facts=ansible_facts, rc=results[0],
+---
+>                                      skipped=skipped, ansible_module_results=results[1], ansible_facts=ansible_facts, rc=results[0],
