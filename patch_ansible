@@ -17,7 +17,7 @@ known_unpatched_list="2.9.0  2.9.1  2.9.2  2.9.3  2.9.4  2.9.5"
 
 found=false
 for v in $known_unpatched_list; do
-    if [ "$v" == "$ansible_version" ]; then
+    if [ "$v" = "$ansible_version" ]; then
         found=true
         break
     fi
@@ -29,16 +29,16 @@ is_ansible_28x=$?
 ask_for_patch() {
     printf "do you want to patch for $ansible_version ? [yes/no]"
     read option
-    if [ "$option" == "yes" ]; then
+    if [ "$option" = "yes" ]; then
         patch_file $fmgr_plugin_file patches/ansible.2.9.x.patch
     fi
 }
 
 patch_file $fmgr_module_util_file patches/fortimanager_plugin.patch
 
-if [ $found == true ]; then
+if [ $found = true ]; then
     patch_file $fmgr_plugin_file patches/ansible.2.9.x.patch
-elif [ $is_ansible_28x == 0 ]; then
+elif [ $is_ansible_28x = 0 ]; then
     echo "No need to patch ansible "$ansible_version" fortimanager plugin"
 else
     ask_for_patch
