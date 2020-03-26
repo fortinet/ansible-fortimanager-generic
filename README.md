@@ -102,3 +102,49 @@ ansible_network_os=fortimanager
 
 $ansible-playbook -i hosts script_add.yml
 ```
+
+### customize error handling
+This Ansible module is limited in handling errors for its nature of being generic, but we are still able to handle errors by overriding the failure conditions:
+- ignore all the errors for the task which is going to be handled.
+- define an auxiliary task `fail` to detect custom failure
+
+One example is `/dvm/cmd/add/device`, 0 is returned if the device is not present and added successfully, -20010 is returned if the device already exists. other codes can be considered failure. the sample playbook is as below:
+```
+- name: Test API
+  hosts: fortimanager01
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - fortinet.fortimanager
+  vars:
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_port: 443
+  tasks:
+    - name: Provisioning
+      fmgr_generic:
+         method: exec
+         params:
+            -  url: /dvm/cmd/add/device
+               data:
+                  adom: root
+                  device:
+                     desc: Provisioned by ansible
+                     device action: add_model
+                     mgmt_mode: fmg
+                     mr: 2
+                     name: fortiVM01
+                     os_type: fos
+                     os_ver: '6.0'
+                     sn: {{ sn }}
+                  flags:
+                    - none
+      register: provision
+      ignore_errors: yes
+
+    - name: Detecting the Provisioning task.
+      fail:
+        msg: "the Provisioning task fail"
+      failed_when: provision.rc != 0 and provision.rc != -20010
+```
+
