@@ -1,0 +1,61 @@
+- name: Add a real device to fortimanager
+  hosts: fortimanager01
+  gather_facts: no
+  connection: httpapi
+  vars:
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_port: 443
+    device_ip: 192.168.190.137
+    device_user: admin
+    device_password: ca$hc0w
+  tasks:
+    - name: Probe the device for metadata
+      fmgr_generic:
+        method: exec
+        params:
+            - url: /dvm/cmd/discover/device
+              data:
+                device:
+                    adm_pass: "{{ device_password }}"
+                    adm_usr: "{{ device_user }}"
+                    ip: "{{ device_ip }}"
+      register: probed_device
+
+
+    - name: Create the task to add the device
+      fmgr_generic:
+         method: exec
+         params:
+            - url: /dvm/cmd/add/device
+              data:
+                  adom: root
+                  device:
+                     adm_pass: "{{ probed_device.ansible_module_results.device.adm_pass }}"
+                     adm_usr: "{{ probed_device.ansible_module_results.device.adm_usr }}"
+                     desc: "The device is added via Ansible"
+                     ip: "{{ probed_device.ansible_module_results.device.ip }}"
+                     mgmt_mode: "fmg"
+                     name: "{{ probed_device.ansible_module_results.device.name }}"
+                     sn: "{{ probed_device.ansible_module_results.device.sn }}"
+                  flags:
+                    - create_task
+                    - nonblocking
+      register: installing_task
+
+    - name: Query the long-term processing task
+      fmgr_generic:
+        method: get
+        params:
+            - url: /task/task/{{ installing_task.ansible_module_results.taskid }}
+      register: taskinfo
+      until: taskinfo.ansible_module_results.percent == 100
+      retries: 60
+      delay: 5
+
+
+    - name: Detect errors in previous task
+      fail:
+        msg: 'the device is not installed correctly, see more in log'
+      failed_when:
+        - taskinfo.ansible_module_results.state == 'error' and  'devsnexist' not in taskinfo.ansible_module_results.line[0].detail
