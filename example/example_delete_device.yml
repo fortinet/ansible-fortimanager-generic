@@ -1,0 +1,46 @@
+- name: Remove a  device from fortimanager
+  hosts: fortimanager01
+  gather_facts: no
+  connection: httpapi
+  vars:
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_port: 443
+    device_name: FGVM04TM19006963
+    device_adom: root
+  
+  tasks:
+    - name: Create the task to delete the device
+      fmgr_generic:
+         method: exec
+         params:
+            - url: /dvm/cmd/del/device
+              data:
+                  adom: "{{ device_adom }}"
+                  device: "{{ device_name }}"
+                  flags:
+                    - create_task
+                    - nonblocking
+      register: uninstalling_task
+
+
+    - name: Query the long-term processing task
+      fmgr_generic:
+        method: get
+        params:
+            - url: /task/task/{{ uninstalling_task.ansible_module_results.taskid }}
+      when: "'taskid' in uninstalling_task.ansible_module_results"
+      register: taskinfo
+      until: taskinfo.ansible_module_results.percent == 100
+      retries: 60
+      delay: 5
+
+
+    - name: Detect errors in previous task
+      when: "'taskid' in uninstalling_task.ansible_module_results"
+      fail:
+        msg: 'the device is not installed correctly, see more in log'
+      failed_when:
+        - taskinfo.ansible_module_results.num_err != 0
+        - taskinfo.ansible_module_results.state == 'error'
+
