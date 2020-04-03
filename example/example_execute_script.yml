@@ -1,0 +1,60 @@
+- name: Create a script on fortimanager.
+  hosts: fortimanager01
+  gather_facts: no
+  connection: httpapi
+  vars:
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_port: 443
+    script_name: demoscript1
+    script_adom: root
+    script_device_name: "FGVM04TM19006963"
+    script_device_vdom: "root"
+  tasks:
+    - name: Create A Script on FortiManager
+      fmgr_generic:
+         method: set
+         params:
+            - url: "/dvmdb/adom/{{ script_adom }}/script"
+              data:
+                - name: "{{ script_name }}"
+                  type: "cli"
+                  desc: "The script is created by ansible"
+                  content: |
+                            config firewall policy
+                                edit 1
+                                    set name foopolicy
+                                    set srcintf "any"
+                                next
+                            end
+
+    - name: Execute the script on the device
+      fmgr_generic:
+        method: exec
+        params:
+            - url: "/dvmdb/adom/{{ script_adom }}/script/execute"
+              data:
+                script: "{{ script_name }}"
+                adom: "{{ script_adom }}"
+                scope:
+                    - name: "{{ script_device_name }}"
+                      vdom: "{{ script_device_vdom }}"
+      register: executing_task
+
+
+    - name: Poll and wait for task to complete
+      fmgr_generic:
+        method: get
+        params:
+            - url: /task/task/{{ executing_task.ansible_module_results.task }}
+      register: taskinfo
+      until: taskinfo.ansible_module_results.percent == 100
+      retries: 60
+      delay: 5
+
+    - name:
+      fail:
+        msg: "see task history: {{ executing_task.ansible_module_results.task }}"
+      failed_when:
+        - taskinfo.ansible_module_results.state == 'error'
+        - taskinfo.ansible_module_results.num_err != 0

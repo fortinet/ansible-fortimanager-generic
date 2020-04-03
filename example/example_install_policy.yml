@@ -1,0 +1,111 @@
+- name: Install a firewall policy package on fortimanager.
+  hosts: fortimanager01
+  gather_facts: no
+  connection: httpapi
+  vars:
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_port: 443
+    policy_package_name: demopackage1
+    policy_adom: root
+    address_name: address_object1
+    service_name: service_object1
+    schedule_name: schedule_object1
+    device_name: FGVM04TM19006963
+    device_vdom: root
+  tasks:
+    - name: Create A package on FortiManager
+      fmgr_generic:
+         method: set
+         params:
+            - url: "/pm/pkg/adom/{{ policy_adom }}"
+              data:
+                name: "{{ policy_package_name }}"
+                type: "pkg"
+    - name: create an address object
+      fmgr_generic:
+        method: set
+        params:
+            - url: "/pm/config/adom/{{ policy_adom }}/obj/firewall/address"
+              data:
+                - name: "{{ address_name }}"
+                  comment: "address object created via generic ansible module"
+                  type: "ipmask"
+                  visibility: "enable"
+                  subnet: "22.33.44.55/32"
+    - name: create a service object
+      fmgr_generic:
+        method: set
+        params:
+            - url: "/pm/config/adom/{{ policy_adom }}/obj/firewall/service/custom"
+              data:
+                - name: "{{ service_name }}"
+                  comment: "a service object created via generic ansible module"
+                  protocol: "TCP/UDP/SCTP"
+                  udp-portrange: "4018-5070"
+                  visibility: "enable"
+    - name: create a schedule object
+      fmgr_generic:
+        method: set
+        params:
+            - url: "pm/config/adom/{{ policy_adom }}/obj/firewall/schedule/recurring"
+              data:
+                - day:
+                    - sunday
+                    - monday
+                  name: "{{ schedule_name }}"
+                  start: "01:00"
+                  end: "02:00"
+
+    - name: create policy in the object
+      fmgr_generic:
+        method: set
+        params:
+            - url: "/pm/config/adom/{{ policy_adom }}/pkg/{{ policy_package_name }}/firewall/policy"
+              data:
+                name: "policy_one"
+                action: "accept"
+                srcintf: 'port1'
+                dstintf: 'port1'
+                srcaddr: "{{ address_name }}"
+                dstaddr: "{{ address_name }}"
+                service: "{{ service_name }}"
+                schedule: "{{ schedule_name }}"
+      register: policyinfo
+      ignore_errors: true
+
+    - name: detect errorr in case policy is duplicated
+      fail:
+        msg: "more info by :-vvvv"
+      failed_when: policyinfo.rc != 0 and policyinfo.rc != -9998
+
+
+    - name: install the policy package
+      fmgr_generic:
+        method: exec
+        params:
+            - url: "/securityconsole/install/package"
+              data:
+                adom: "{{ policy_adom }}"
+                pkg: "{{ policy_package_name }}"
+                scope:
+                    - name: "{{ device_name }}"
+                      vdom: "{{ device_vdom }}"
+      register: installing_task
+
+    - name: poll and wait for the task to complete
+      fmgr_generic:
+        method: get
+        params:
+            - url: /task/task/{{ installing_task.ansible_module_results.task }}
+      register: taskinfo
+      until: taskinfo.ansible_module_results.percent == 100
+      retries: 60
+      delay: 5
+
+    - name: Detect errors in the final task
+      fail:
+        msg: "see more by : -vvv"
+      failed_when:
+        - taskinfo.ansible_module_results.state == 'error'
+
