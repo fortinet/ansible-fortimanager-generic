@@ -21,10 +21,6 @@
                     adm_usr: "{{ device_user }}"
                     ip: "{{ device_ip }}"
       register: probed_device
-      changed_when: probed_device.ansible_module_results.device.adm_usr != 'admin'
-
-    - debug:
-        var: probed_device.rc
 
     - name: Create the task to add the device
       fmgr_generic:
