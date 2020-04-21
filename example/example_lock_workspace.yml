@@ -17,7 +17,7 @@
                 adom-status: 'enable'
                 workspace-mode: 'workflow'
    
-    # piror to run the playbook, we can login to web pages to lock the adom using
+    # piror to running the playbook, we can login to web pages to lock the adom using
     # another users, and we can observe the adom lock is acquired only after
     # we unlock the adom on the web pages
     - name: Lock the adom root until success.
