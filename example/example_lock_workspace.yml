@@ -1,0 +1,58 @@
+- name: Workspace and ADOM locking
+  hosts: fortimanager01
+  gather_facts: no
+  connection: httpapi
+  vars:
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_port: 443
+    ADOM: root
+  tasks:
+    - name: Enable adom status and workspace mode
+      fmgr_generic:
+        method: set
+        params:
+            - url: '/cli/global/system/global'
+              data:
+                adom-status: 'enable'
+                workspace-mode: 'workflow'
+   
+    # piror to run the playbook, we can login to web pages to lock the adom using
+    # another users, and we can observe the adom lock is acquired only after
+    # we unlock the adom on the web pages
+    - name: Lock the adom root until success.
+      fmgr_generic:
+        method: exec
+        params:
+            - url: '/dvmdb/adom/{{ ADOM }}/workspace/lock'
+      register: lockrequest
+      until: lockrequest.ansible_module_results.status.code == 0
+      retries: 60
+      delay: 5
+
+    - name: Inspect locking infomation
+      fmgr_generic:
+        method: get
+        params:
+            - url: '/dvmdb/adom/{{ ADOM }}/workspace/lockinfo'
+      register: lockinfo
+
+    - name: dump the locking information
+      debug: var=lockinfo.ansible_module_results 
+
+
+    
+    ### do some work.
+
+    - name: commit the change.
+      fmgr_generic:
+        method: exec
+        params:
+            - url: '/dvmdb/adom/{{ ADOM }}/workspace/commit'
+
+    - name: Unlock the workspace
+      fmgr_generic:
+        method: exec
+        params:
+            - url: '/dvmdb/adom/{{ ADOM }}/workspace/unlock'
+    
