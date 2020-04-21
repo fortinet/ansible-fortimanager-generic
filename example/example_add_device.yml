@@ -22,6 +22,7 @@
                     ip: "{{ device_ip }}"
       register: probed_device
 
+
     - name: Create the task to add the device
       fmgr_generic:
          method: exec
