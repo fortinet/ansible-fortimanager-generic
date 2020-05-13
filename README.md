@@ -4,6 +4,8 @@
 
 The generic module is to fill the gap which exists between FortiManager features being published and Ansible modules reflecting those features.
 
+**warning**: It's preferable to use [FortiManager Ansible Collection](https://galaxy.ansible.com/fortinet/fortimanager) instead unless some features are not available there.
+
 ### Setup the environment 
 Make sure you have `ansible>=2.8.0` installed with python2 or python3, then run the `setup.py` to copy the generic module to ansible module directory.
 
