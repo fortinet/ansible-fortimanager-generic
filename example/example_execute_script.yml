@@ -51,10 +51,6 @@
       until: taskinfo.ansible_module_results.percent == 100
       retries: 60
       delay: 5
-
-    - name:
-      fail:
-        msg: "see task history: {{ executing_task.ansible_module_results.task }}"
       failed_when:
         - taskinfo.ansible_module_results.state == 'error'
         - taskinfo.ansible_module_results.num_err != 0

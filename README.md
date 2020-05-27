@@ -142,11 +142,6 @@ One example is `/dvm/cmd/add/device`, 0 is returned if the device is not present
                   flags:
                     - none
       register: provision
-      ignore_errors: yes
-
-    - name: Detecting the Provisioning task.
-      fail:
-        msg: "the Provisioning task fail"
       failed_when: provision.rc != 0 and provision.rc != -20010
 ```
 

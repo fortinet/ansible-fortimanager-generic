@@ -52,10 +52,5 @@
       until: taskinfo.ansible_module_results.percent == 100
       retries: 60
       delay: 5
-
-
-    - name: Detect errors in previous task
-      fail:
-        msg: 'the device is not installed correctly, see more in log'
       failed_when:
         - taskinfo.ansible_module_results.state == 'error' and  'devsnexist' not in taskinfo.ansible_module_results.line[0].detail
