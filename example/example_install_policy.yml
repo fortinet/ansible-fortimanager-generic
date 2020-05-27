@@ -72,11 +72,6 @@
                 service: "{{ service_name }}"
                 schedule: "{{ schedule_name }}"
       register: policyinfo
-      ignore_errors: true
-
-    - name: detect errorr in case policy is duplicated
-      fail:
-        msg: "more info by :-vvvv"
       failed_when: policyinfo.rc != 0 and policyinfo.rc != -9998
 
 
@@ -102,10 +97,6 @@
       until: taskinfo.ansible_module_results.percent == 100
       retries: 60
       delay: 5
-
-    - name: Detect errors in the final task
-      fail:
-        msg: "see more by : -vvv"
       failed_when:
         - taskinfo.ansible_module_results.state == 'error'
 

@@ -1,8 +1,12 @@
-259c259
+252a253
+>                 # XXX: remove skipped because that will affect `failed_when` behavior
+258,259c259,260
+<                     module.exit_json(msg=msg, failed=failed, changed=changed, unreachable=unreachable, skipped=skipped,
 <                                      results=results[1], ansible_facts=ansible_facts, rc=results[0],
 ---
+>                     module.exit_json(msg=msg, failed=failed, changed=changed, unreachable=unreachable,
 >                                      ansible_module_results=results[1], ansible_facts=ansible_facts, rc=results[0],
-267c267
+267c268
 <                                      skipped=skipped, results=results[1], ansible_facts=ansible_facts, rc=results[0],
 ---
->                                      skipped=skipped, ansible_module_results=results[1], ansible_facts=ansible_facts, rc=results[0],
+>                                      ansible_module_results=results[1], ansible_facts=ansible_facts, rc=results[0],
