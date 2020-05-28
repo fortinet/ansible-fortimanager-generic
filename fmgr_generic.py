@@ -113,6 +113,14 @@ import json
 def main():
 
     module_arg_spec = {
+        'rc_succeeded': {
+            'required': False,
+            'type': 'list'
+        },
+        'rc_failed': {
+            'required': False,
+            'type': 'list'
+        },
         'method': {
             'type': 'str',
             'required': False
@@ -162,7 +170,8 @@ def main():
     try:
         response = connection.send_request(method, params)
         fmgr.govern_response(module=module, results=response, msg='Operation Finished',
-                             ansible_facts=fmgr.construct_ansible_facts(response, module.params, module.params))
+                             ansible_facts=fmgr.construct_ansible_facts(response, module.params, module.params),
+                             changed_if_success=True, stop_on_success=True)
     except Exception as e:
         module.fail_json(msg='error sending request: %s' % (e))
 
