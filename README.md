@@ -148,7 +148,7 @@ One example is `/dvm/cmd/add/device`, 0 is returned if the device is not present
       failed_when: provision.rc != 0 and provision.rc != -20010
 ```
 
-#### Detect failure using `rc_succeeded` statement
+#### Detect success using `rc_succeeded` statement
 ```
 - name: Test API
   hosts: fortimanager01
@@ -184,7 +184,7 @@ One example is `/dvm/cmd/add/device`, 0 is returned if the device is not present
             - -20010
 ```
 
-#### Make failures using `rc_succeeded` statement intentionally
+#### Make failure using `rc_failed` statement intentionally
 
 This is the case where a certain status code is considered failure.
 
@@ -223,7 +223,7 @@ This is the case where a certain status code is considered failure.
             - -20010
 ```
 
-#### Priority of statements
+#### Priority of three statements
 
 It's legal to define all three failure/success statements.
 
