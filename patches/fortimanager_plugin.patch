@@ -1,12 +1,37 @@
-252a253
+145a146,148
+>         # Override the good codes if users specify some
+>         if module.params['rc_succeeded'] is not None:
+>             rc_data["good_codes"] = module.params['rc_succeeded']
+174c177
+<                                     good_codes=rc_data.get("good_codes", (0,)),
+---
+>                                     good_codes=rc_data.get("good_codes", [0]),
+233c236,237
+<         if not failed and not success:
+---
+>         ansible_rc = 0
+>         if len(good_codes) > 0 or module.params['rc_failed'] and len(module.params['rc_failed']) > 0:
+234a239
+>                 ansible_rc = results[0]
+238a244,250
+>                     ansible_rc = 0
+>                 # Continue to identify failure codes. that's to say, failure codes has higher priority
+>                 if module.params['rc_failed'] and results[0] in module.params['rc_failed']:
+>                     success = False
+>                     failed = True
+>                     ansible_rc = results[0]
+>                     msg = 'Ansible result overridden'
+252a265
 >                 # XXX: remove skipped because that will affect `failed_when` behavior
-258,259c259,260
+258,259c271,272
 <                     module.exit_json(msg=msg, failed=failed, changed=changed, unreachable=unreachable, skipped=skipped,
 <                                      results=results[1], ansible_facts=ansible_facts, rc=results[0],
 ---
 >                     module.exit_json(msg=msg, failed=failed, changed=changed, unreachable=unreachable,
->                                      ansible_module_results=results[1], ansible_facts=ansible_facts, rc=results[0],
-267c268
+>                                      ansible_module_results=results[1], ansible_facts=ansible_facts, rc=ansible_rc,
+264d276
+<                     success = False
+267c279
 <                                      skipped=skipped, results=results[1], ansible_facts=ansible_facts, rc=results[0],
 ---
->                                      ansible_module_results=results[1], ansible_facts=ansible_facts, rc=results[0],
+>                                      ansible_module_results=results[1], ansible_facts=ansible_facts, rc=ansible_rc,

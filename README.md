@@ -105,12 +105,15 @@ ansible_network_os=fortimanager
 $ansible-playbook -i hosts script_add.yml
 ```
 
-### customize error handling
+### Customize error handling
 This Ansible module is limited in handling errors for its nature of being generic, but we are still able to handle errors by overriding the failure conditions:
-- ignore all the errors for the task which is going to be handled.
-- define an auxiliary task `fail` to detect custom failure
+- `rc_succeeded` to override the status code to succeed.
+- `rc_failed` to override the sttaus code to fail.
+- Define ansible `failed_when` conditional statements.
 
-One example is `/dvm/cmd/add/device`, 0 is returned if the device is not present and added successfully, -20010 is returned if the device already exists. other codes can be considered failure. the sample playbook is as below:
+One example is `/dvm/cmd/add/device`, 0 is returned if the device is not present and added successfully, -20010 is returned if the device already exists. other codes can be considered failure. we will present the examples one by one:
+
+#### Detect failure using `failed_when` statement
 ```
 - name: Test API
   hosts: fortimanager01
@@ -145,3 +148,96 @@ One example is `/dvm/cmd/add/device`, 0 is returned if the device is not present
       failed_when: provision.rc != 0 and provision.rc != -20010
 ```
 
+#### Detect failure using `rc_succeeded` statement
+```
+- name: Test API
+  hosts: fortimanager01
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - fortinet.fortimanager
+  vars:
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_port: 443
+  tasks:
+    - name: Provisioning
+      fmgr_generic:
+         method: exec
+         params:
+            -  url: /dvm/cmd/add/device
+               data:
+                  adom: root
+                  device:
+                     desc: Provisioned by ansible
+                     device action: add_model
+                     mgmt_mode: fmg
+                     mr: 2
+                     name: fortiVM01
+                     os_type: fos
+                     os_ver: '6.0'
+                     sn: {{ sn }}
+                  flags:
+                    - none
+         rc_succeeded:
+            - 0
+            - -20010
+```
+
+#### Make failures using `rc_succeeded` statement intentionally
+
+This is the case where a certain status code is considered failure.
+
+```
+- name: Test API
+  hosts: fortimanager01
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - fortinet.fortimanager
+  vars:
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_port: 443
+  tasks:
+    - name: Provisioning
+      fmgr_generic:
+         method: exec
+         params:
+            -  url: /dvm/cmd/add/device
+               data:
+                  adom: root
+                  device:
+                     desc: Provisioned by ansible
+                     device action: add_model
+                     mgmt_mode: fmg
+                     mr: 2
+                     name: fortiVM01
+                     os_type: fos
+                     os_ver: '6.0'
+                     sn: {{ sn }}
+                  flags:
+                    - none
+         rc_failed:
+            - 0
+            - -20010
+```
+
+#### Priority of statements
+
+It's legal to define all three failure/success statements.
+
+Among the three statements, `failed_when` is most privileged, `rc_failed` is less privileged and `rc_succeeded` is least privileged.
+
+In the example below, the `failed_when` eventually takes effect to calculate the failure conditions.
+
+```
+    ... ... ..
+        rc_succeeded:
+            - 0
+        rc_failed:
+            - 0
+    register: task
+    failed_when:
+        - task.rc != 0
+```
