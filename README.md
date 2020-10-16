@@ -1,5 +1,8 @@
 # ansible-fortimanager-generic
 
+** Please note this Ansible module has been ported to Ansible Galaxy Collection: [fortinet.fortimanager](https://galaxy.ansible.com/fortinet/fortimanager)**
+** Also see its document: https://ansible-galaxy-fortimanager-docs.readthedocs.io/en/latest/generic.html **
+
 ### What's the generic module?
 
 The generic module is to fill the gap which exists between FortiManager features being published and Ansible modules reflecting those features.
